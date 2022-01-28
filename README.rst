@@ -27,12 +27,12 @@ Quickstart
 ----------
 ``dooti`` currently supports three commands:
 
-    ext
-        specify handlers for file extensions (will be automapped to associated UTI)
-    scheme
-        specify handlers for URL schemes
-    uti
-        specify handlers for specific UTI
+ext
+    specify handlers for file extensions (will be automapped to associated UTI)
+scheme
+    specify handlers for URL schemes
+uti
+    specify handlers for specific UTI
 
 The first argument is always the target file extension / URL scheme / UTI. This allows you to inspect the current handlers for the specific target:
 
@@ -47,23 +47,23 @@ The first argument is always the target file extension / URL scheme / UTI. This 
 
 When you want to change a setting, you need to specify the second argument, which is the default handler to set. The following three formats are supported:
 
-    * name of application:
+* name of application:
 
-        .. code-block:: bash
+    .. code-block:: bash
 
-            dooti ext html "Brave Browser"
+        dooti ext html "Brave Browser"
 
-    * absolute filesystem path:
+* absolute filesystem path:
 
-        .. code-block:: bash
+    .. code-block:: bash
 
-            dooti scheme http "/Applications/Firefox.app"
+        dooti scheme http "/Applications/Firefox.app"
 
-    * bundle ID
+* bundle ID
 
-        .. code-block:: bash
+    .. code-block:: bash
 
-            dooti uti py com.sublimetext.4
+        dooti uti py com.sublimetext.4
 
 
 Similar tools
