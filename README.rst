@@ -14,6 +14,7 @@ Limitations
 * The CLI interface is very spartan currently, including not being very talkative and not catching exceptions.
 * The designated handler has to be installed before running the command for this to work at all.
 * Setting some URL scheme handlers (especially for http) might cause a prompt.
+* Setting some file extension handlers might be restricted (especially html seems to fail silently).
 
 Installation
 ------------
@@ -51,7 +52,7 @@ When you want to change a setting, you need to specify the second argument, whic
 
     .. code-block:: bash
 
-        dooti ext html "Brave Browser"
+        dooti ext csv "Sublime Text"
 
 * absolute filesystem path:
 
