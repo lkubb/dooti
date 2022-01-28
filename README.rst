@@ -6,7 +6,7 @@ Set default handlers for files and URL schemes on MacOS 12.0+.
 
 Why?
 ----
-Most existing tools use `LSSetDefaultRoleHandlerForContentType <https://developer.apple.com/documentation/coreservices/1447588-lssethandleroptionsforcontenttyp?language=objc>`_ and `LSSetDefaultHandlerForURLScheme <https://developer.apple.com/documentation/coreservices/1447760-lssetdefaulthandlerforurlscheme?language=objc>`_, which are deprecated and apparently only available up to macOS 12.0. ``dooti`` uses a different API and should work on Monterey (12.0) and above.
+Most existing tools use `LSSetDefaultRoleHandlerForContentType <https://developer.apple.com/documentation/coreservices/1444955-lssetdefaultrolehandlerforconten>`_ and `LSSetDefaultHandlerForURLScheme <https://developer.apple.com/documentation/coreservices/1447760-lssetdefaulthandlerforurlscheme?language=objc>`_, which are deprecated and apparently only available up to macOS 12.0. ``dooti`` uses a different API and should work on Monterey (12.0) and above.
 
 Limitations
 -----------
