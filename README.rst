@@ -73,3 +73,9 @@ Similar tools
 * `openwith <https://github.com/jdek/openwith>`_
 * `defaultbrowser <https://gist.github.com/miketaylr/5969656>`_
 * `SwiftDefaultApps <https://github.com/Lord-Kamina/SwiftDefaultApps>`_
+
+Todo
+----
+* write proper CLI interface
+* support multiple associations
+* support dotfiles
