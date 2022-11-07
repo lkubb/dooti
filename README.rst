@@ -11,7 +11,6 @@ Most existing tools use `LSSetDefaultRoleHandlerForContentType <https://develope
 Limitations
 -----------
 * This tool was built out of necessity for myself and is not battle-tested.
-* The CLI interface is very spartan currently, including not being very talkative and not catching exceptions.
 * The designated handler has to be installed before running the command for this to work at all.
 * Setting some URL scheme handlers (especially for http) might cause a prompt.
 * Setting some file extension handlers might be restricted (especially html seems to fail silently).
@@ -35,36 +34,39 @@ scheme
 uti
     specify handlers for specific UTI
 
-The first argument is always the target file extension / URL scheme / UTI. This allows you to inspect the current handlers for the specific target:
+Positional arguments are always the target file extension(s) / URL scheme(s) / UTI(s). This allows you to inspect the current handlers for the specific target(s):
 
 .. code-block:: console
 
-    $ dooti ext html
-    /Applications/Firefox.app
-    $ dooti scheme http
-    /Applications/Firefox.app
+    $ dooti ext html xml
+    html: /Applications/Firefox.app
+    xml: /Applications/Sublime Text.app
+    $ dooti scheme http https ftp
+    ftp: /System/Library/CoreServices/Finder.app
+    http: /Applications/Firefox.app
+    https: /Applications/Firefox.app
     $ dooti uti public.html
-    /Applications/Firefox.app
+    public.html: /Applications/Firefox.app
 
-When you want to change a setting, you need to specify the second argument, which is the default handler to set. The following three formats are supported:
+Changing the default handler can be requested by specifying ``-x <handler ref>``/``--handler <handler_ref>``. The following formats for ``<handler_ref>`` are supported:
 
 * name of application:
 
     .. code-block:: bash
 
-        dooti ext csv "Sublime Text"
+        dooti ext csv py -x "Sublime Text"
 
 * absolute filesystem path:
 
     .. code-block:: bash
 
-        dooti scheme http "/Applications/Firefox.app"
+        dooti scheme http -x "/Applications/Firefox.app"
 
 * bundle ID
 
     .. code-block:: bash
 
-        dooti uti py com.sublimetext.4
+        dooti uti public.python-script -x com.sublimetext.4
 
 
 Similar tools
@@ -76,6 +78,4 @@ Similar tools
 
 Todo
 ----
-* write proper CLI interface
-* support multiple associations
 * support dotfiles

@@ -21,22 +21,22 @@ To use dooti in a project::
 
 As a CLI utility
 ----------------
-Show file path to current handler of file extension::
+Show file path(s) to current handler(s) of file extension(s)::
 
     dooti ext csv
 
-Show file path to current handler of URL scheme::
+Show file path(s) to current handler(s) of URL scheme(s)::
 
-    dooti scheme http
+    dooti scheme http https
 
-Set default handler for file extension::
+Set default handler for file extension(s)::
 
-    dooti ext csv "Sublime Text"
-    dooti ext csv com.sublimetext.4
-    dooti ext csv "/Applications/Sublime Text.app"
+    dooti ext csv -x "Sublime Text"
+    dooti ext csv -x com.sublimetext.4
+    dooti ext csv -x "/Applications/Sublime Text.app"
 
-Set default handler for URL scheme::
+Set default handler for URL scheme(s)::
 
-    dooti scheme http Firefox
-    dooti scheme http org.mozilla.firefox
-    dooti scheme http /Applications/Firefox.app
+    dooti scheme http -x Firefox
+    dooti scheme http -x org.mozilla.firefox
+    dooti scheme http -x /Applications/Firefox.app

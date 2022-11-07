@@ -1,8 +1,9 @@
 import os.path
+
 import objc
 from AppKit import NSWorkspace
 from Foundation import NSURL, NSArray
-from UniformTypeIdentifiers import UTType, UTTagClassFilenameExtension
+from UniformTypeIdentifiers import UTTagClassFilenameExtension, UTType
 
 
 class ExtHasNoRegisteredUTI(ValueError):

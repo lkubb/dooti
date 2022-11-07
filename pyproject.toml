@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "dooti"
-version = "0.0.1"
-description = "Sets default file and URL scheme handlers on macOS 12.0+"
+version = "0.1.1"
+description = "Manages default file and URL scheme handlers on macOS 12.0+"
 authors = ["jeanluc"]
 readme = "README.rst"
 repository = "https://github.com/lkubb/dooti"
@@ -20,7 +20,7 @@ dooti = "dooti.cli:cli"
 python = "^3.10"
 pyobjc-core = "^7.2"
 pyobjc-framework-UniformTypeIdentifiers = "^7.2"
-click = "^7"
+PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^4.4.0"
