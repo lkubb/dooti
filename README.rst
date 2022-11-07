@@ -52,21 +52,21 @@ Changing the default handler can be requested by specifying ``-x <handler ref>``
 
 * name of application:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        dooti ext csv py -x "Sublime Text"
+    dooti ext csv py -x "Sublime Text"
 
 * absolute filesystem path:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        dooti scheme http -x "/Applications/Firefox.app"
+    dooti scheme http -x "/Applications/Firefox.app"
 
 * bundle ID
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        dooti uti public.python-script -x com.sublimetext.4
+    dooti uti public.python-script -x com.sublimetext.4
 
 
 Similar tools
