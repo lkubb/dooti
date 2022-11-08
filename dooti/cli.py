@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 from xdg import xdg_config_home
 
-from .dooti import ApplicationNotFound, dooti
+from .dooti import ApplicationNotFound, Dooti
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -17,15 +17,16 @@ logging.basicConfig(
 
 class DootiCLI:
     """
-    Handle the CLI interface for ``dooti``.
+    Wraps Dooti for the command line.
     """
+
     changes = {}
     errors = []
     handlers = {}
     scopes = ("ext", "scheme", "uti")
 
     def __init__(self, assume_yes=False, dry_run=False, fmt="yaml"):
-        self.do = dooti()
+        self.do = Dooti()
         self.assume_yes = assume_yes
         self.dry_run = dry_run
         self.fmt = fmt

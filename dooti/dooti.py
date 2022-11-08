@@ -1,24 +1,34 @@
 import os.path
 
 import objc
-from AppKit import NSWorkspace
-from Foundation import NSURL, NSArray
-from UniformTypeIdentifiers import UTTagClassFilenameExtension, UTType
+from AppKit import NSWorkspace  # pylint: disable=no-name-in-module
+from Foundation import NSURL, NSArray  # pylint: disable=no-name-in-module
+from UniformTypeIdentifiers import UTTagClassFilenameExtension, UTType  # pylint: disable=no-name-in-module
 
 
 class ExtHasNoRegisteredUTI(ValueError):
-    pass
+    """
+    Raised when trying to set a handler for a file extension
+    that does not have an associated registered UTI.
+    """
 
 
 class ApplicationNotFound(ValueError):
-    pass
+    """
+    Raised when a handler reference cannot be resolved.
+    """
 
 
 class BundleURLNotFound(ApplicationNotFound):
-    pass
+    """
+    Raised when a bundle ID is not registered on the system.
+    """
 
 
-class dooti:
+class Dooti:
+    """
+    Wrapper for macOS system API to manage default handlers on macOS 12.0+.
+    """
     def __init__(self, workspace=None):
         if workspace is None:
             workspace = NSWorkspace.sharedWorkspace()
@@ -79,7 +89,7 @@ class dooti:
         :raises:
             ExtHasNoRegisteredUTI if the file extension is unknown to MacOS and not allowing dynamic UTI
         """
-        utis = dooti.ext_to_utis(ext)
+        utis = Dooti.ext_to_utis(ext)
 
         if self.is_dynamic_uti(utis[0]) and not allow_dynamic:
             raise ExtHasNoRegisteredUTI(
@@ -98,7 +108,7 @@ class dooti:
         :param str | UTType ext_or_uti: UTI or file extension to check
         """
         if isinstance(ext_or_uti, str):
-            ext_or_uti = dooti.ext_to_utis(ext_or_uti)[0]
+            ext_or_uti = Dooti.ext_to_utis(ext_or_uti)[0]
         return str(ext_or_uti).startswith("dyn.")
 
     def get_default_uti(self, uti: str | UTType) -> str | None:
@@ -128,7 +138,7 @@ class dooti:
 
         :param str ext: filename extension to look up the default handler path for
         """
-        utis = dooti.ext_to_utis(ext)
+        utis = Dooti.ext_to_utis(ext)
 
         # assume the handler is the same for all types (sensible?)
         # even if the extension was not registered, utis will still contain
@@ -183,10 +193,10 @@ class dooti:
 
         try:
             return self.name_to_url(app)
-        except ApplicationNotFound:
+        except ApplicationNotFound as exc:
             raise ApplicationNotFound(
                 f"Could not find an application matching the description '{app}'."
-            )
+            ) from exc
 
     def bundle_to_url(self, bundle_id: str) -> NSURL:
         """
