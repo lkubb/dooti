@@ -2,10 +2,12 @@ import argparse
 import json
 import logging
 import sys
+from pathlib import Path
 
 import yaml
+from xdg import xdg_config_home
 
-from .dooti import ApplicationNotFound, ExtHasNoRegisteredUTI, dooti
+from .dooti import ApplicationNotFound, dooti
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -13,142 +15,239 @@ logging.basicConfig(
 )
 
 
-def ext(extensions, dynamic, handler, fmt, assume_yes, dry_run):
-    ret = {"changes": {}, "errors": []}
+class DootiCLI:
+    """
+    Handle the CLI interface for ``dooti``.
+    """
+    changes = {}
+    errors = []
+    handlers = {}
+    scopes = ("ext", "scheme", "uti")
 
-    do = dooti()
-    current = {ext: do.get_default_ext(ext) for ext in extensions}
+    def __init__(self, assume_yes=False, dry_run=False, fmt="yaml"):
+        self.do = dooti()
+        self.assume_yes = assume_yes
+        self.dry_run = dry_run
+        self.fmt = fmt
 
-    if handler is None:
-        return out(current, fmt)
+    def apply_(self, file=None, dynamic=False):
+        """
+        Apply configuration from a file.
+        """
+        file = self._find_config(file)
+        definitions = self._load_config(file)
 
-    try:
-        handler = do.get_app_path(handler).fileSystemRepresentation().decode()
-    except ApplicationNotFound as err:
-        ret["errors"].append(str(err))
-        out(ret, fmt)
-        return 1
+        parsed = {"extensions": {}, "schemes": {}, "utis": {}}
 
-    diff = {
-        ext: {"from": current[ext], "to": handler}
-        for ext in extensions
-        if current[ext] != handler
-    }
+        for ext, handler in definitions.get("ext", {}).items():
+            _, single = self.ext([ext], dynamic=dynamic, handler=handler)
+            parsed["extensions"].update(single["extensions"])
 
-    if dry_run:
-        ret["changes"]["extensions"] = diff
-        return out(ret, fmt)
-    if diff and not (assume_yes or _ask_consent({"extension": diff})):
-        log.info("Did not get consent to apply changes. Exiting.")
-        return 2
+        for scope in ("scheme", "uti"):
+            parser = getattr(self, scope)
+            for item, handler in definitions.get(scope, {}).items():
+                _, single = parser([item], handler=handler)
+                parsed[f"{scope}s"].update(single[f"{scope}s"])
 
-    errored = []
-    for ext in diff:
+        for scheme, handler in definitions.get("schemes", {}).items():
+            _, single = self.scheme([scheme], handler=handler)
+            parsed["extensions"].update(single["extensions"])
+
+        for handler, app_config in definitions.get("app", {}).items():
+            if "ext" in app_config:
+                _, single = self.ext(
+                    app_config["ext"], dynamic=dynamic, handler=handler
+                )
+                parsed["extensions"].update(single["extensions"])
+            for scope in ("scheme", "uti"):
+                if scope in app_config:
+                    parser = getattr(self, scope)
+                    _, single = parser(app_config[scope], handler=handler)
+                    parsed[f"{scope}s"].update(single[f"{scope}s"])
+
+        return None, parsed
+
+    def ext(self, extensions, dynamic=False, handler=None):
+        """
+        Set handler or get handlers for a list of file extensions.
+        """
+        current = {ext: self.do.get_default_ext(ext) for ext in extensions}
+        if handler is None:
+            return current, None
+
+        handler = self._lookup_handler(handler)
+        if not dynamic:
+            allowed_extensions = [
+                ext for ext in extensions if not self.do.is_dynamic_uti(ext)
+            ]
+            disallowed_extensions = set(extensions) - set(allowed_extensions)
+            for ext in disallowed_extensions:
+                self.errors.append(
+                    f"No UTI are registered for file extension '{ext}'. "
+                    "To force using a dynamic UTI, pass `-u`/`--dynamic`."
+                )
+            extensions = allowed_extensions
+
+        diff = {
+            ext: {"from": current[ext], "to": handler}
+            for ext in extensions
+            if current[ext] != handler
+        }
+
+        return current, {"extensions": diff}
+
+    def scheme(self, schemes, handler=None):
+        """
+        Set handler or get handlers for a list of schemes.
+        """
+        current = {scheme: self.do.get_default_scheme(scheme) for scheme in schemes}
+
+        if handler is None:
+            return current, None
+
+        handler = self._lookup_handler(handler)
+
+        diff = {
+            scheme: {"from": current[scheme], "to": handler}
+            for scheme in schemes
+            if current[scheme] != handler
+        }
+
+        return current, {"schemes": diff}
+
+    def uti(self, utis, handler=None):
+        """
+        Set handler or get handlers for a list of UTI.
+        """
+        current = {uti: self.do.get_default_uti(uti) for uti in utis}
+
+        if handler is None:
+            return current, None
+
+        handler = self._lookup_handler(handler)
+
+        diff = {
+            uti: {"from": current[uti], "to": handler}
+            for uti in utis
+            if current[uti] != handler
+        }
+
+        return current, {"utis": diff}
+
+    def run(self, func, args):
+        """
+        Call the requested function, catch errors and handle output.
+        """
+        ret = None
         try:
-            do.set_default_ext(ext, handler, allow_dynamic=dynamic)
-        except ExtHasNoRegisteredUTI:
-            errored.append(ext)
-            ret["errors"].append(
-                f"No UTI are registered for file extension '{ext}'. To force using a dynamic UTI, pass `-u`/`--dynamic`."
+            current, diff = getattr(self, func)(**vars(args))
+            if diff is None:
+                ret = current
+            else:
+                self._apply_diff(diff)
+        except (ValueError, yaml.parser.ParserError, ApplicationNotFound) as err:
+            self.errors.append(str(err))
+        except Exception as err:  # pylint: disable=broad-except
+            log.error(str(err))
+        finally:
+            self._output(ret)
+            sys.exit(int(bool(self.errors)))
+
+    def _apply_diff(self, diff):
+        if self.dry_run or not any(
+            (scope in diff and diff[scope])
+            for scope in ("extensions", "schemes", "utis")
+        ):
+            self.changes = diff
+            return
+        if not (self.assume_yes or self._ask_consent(diff)):
+            log.info("Did not get consent to apply changes. Exiting.")
+            return
+
+        if "extensions" in diff:
+            for ext, handler in diff["extensions"].items():
+                self.do.set_default_ext(ext, handler["to"], allow_dynamic=True)
+            self.changes["extensions"] = diff["extensions"]
+
+        if "schemes" in diff:
+            for scheme, handler in diff["schemes"].items():
+                self.do.set_default_scheme(scheme, handler["to"])
+            self.changes["schemes"] = diff["schemes"]
+
+        if "utis" in diff:
+            for uti, handler in diff["utis"].items():
+                self.do.set_default_uti(uti, handler["to"])
+            self.changes["utis"] = diff["utis"]
+
+    def _output(self, ret=None):
+        if ret is None:
+            ret = {"changes": self.changes, "errors": self.errors}
+        if "json" == self.fmt:
+            return print(json.dumps(ret))
+        return print(yaml.dump(ret))
+
+    def _lookup_handler(self, handler):
+        if handler not in self.handlers:
+            self.handlers[handler] = (
+                self.do.get_app_path(handler).fileSystemRepresentation().decode()
             )
-    for errd in errored:
-        del diff[errd]
-    ret["changes"]["extensions"] = diff
-    return out(ret, fmt)
+        return self.handlers[handler]
+
+    def _find_config(self, file=None):
+        if file is None:
+            xch = xdg_config_home()
+
+            for path in (
+                xch / "dooti.yaml",
+                xch / "dooti.yml",
+                xch / "dooti" / "dooti.yaml",
+                xch / "dooti" / "dooti.yml",
+                xch / "dooti" / "config.yaml",
+                xch / "dooti" / "config.yml",
+            ):
+                if path.exists():
+                    return path
+            raise ValueError(f"Could not find dooti configuration in `{xch}`.")
+        if not Path(file).exists():
+            raise ValueError(
+                f"Passed dooti configuration file `{file}` does not exist."
+            )
+        return file
+
+    def _load_config(self, file):
+        with open(file, encoding="utf-8") as f:
+            definitions = yaml.load(f, Loader=yaml.Loader)
+
+        if not isinstance(definitions, dict):
+            raise ValueError("Invalid configuration, must be a dictionary.")
+        if not any(x in definitions for x in ("app",) + self.scopes):
+            raise ValueError(
+                "Configuration does not contain any actionable definitions."
+            )
+        return definitions
+
+    def _ask_consent(self, diffs):
+        for atype, diff in diffs.items():
+            if not diff:
+                continue
+            print(
+                f"The following {atype[:-1]}{'s are' if len(diff) > 1 else ' is'} "
+                "set to be changed:"
+            )
+            for name, change in diff.items():
+                print(f"{name}: {change['from']} -> {change['to']}")
+            print()
+        try:
+            return input("Do you want to continue? [y/n]: ").lower().startswith("y")
+        except KeyboardInterrupt:
+            print()
+            return False
 
 
-def scheme(schemes, handler, fmt, assume_yes, dry_run):
-    ret = {"changes": {}, "errors": []}
-
-    do = dooti()
-    current = {scheme: do.get_default_scheme(scheme) for scheme in schemes}
-
-    if handler is None:
-        return out(current, fmt)
-
-    try:
-        handler = do.get_app_path(handler).fileSystemRepresentation().decode()
-    except ApplicationNotFound as err:
-        ret["errors"].append(str(err))
-        out(ret, fmt)
-        return 1
-
-    diff = {
-        scheme: {"from": current[scheme], "to": handler}
-        for scheme in schemes
-        if current[scheme] != handler
-    }
-
-    if dry_run:
-        ret["changes"]["schemes"] = diff
-        return out(ret, fmt)
-    if diff and not (assume_yes or _ask_consent({"scheme": diff})):
-        log.info("Did not get consent to apply changes. Exiting.")
-        return 2
-
-    for scheme in diff:
-        do.set_default_scheme(scheme, handler)
-    ret["changes"]["schemes"] = diff
-    return out(ret, fmt)
-
-
-def uti(utis, handler, fmt, assume_yes, dry_run):
-    ret = {"changes": {}, "errors": []}
-
-    do = dooti()
-    current = {uti: do.get_default_uti(uti) for uti in utis}
-
-    if handler is None:
-        return out(current, fmt)
-
-    try:
-        handler = do.get_app_path(handler).fileSystemRepresentation().decode()
-    except ApplicationNotFound as err:
-        ret["errors"].append(str(err))
-        out(ret, fmt)
-        return 1
-
-    diff = {
-        uti: {"from": current[uti], "to": handler}
-        for uti in utis
-        if current[uti] != handler
-    }
-
-    if dry_run:
-        ret["changes"]["utis"] = diff
-        return out(ret, fmt)
-    if diff and not (assume_yes or _ask_consent({"uti": diff})):
-        log.info("Did not get consent to apply changes. Exiting.")
-        return 2
-
-    for uti in diff:
-        do.set_default_uti(uti, handler)
-    ret["changes"]["utis"] = diff
-    return out(ret, fmt)
-
-
-def out(out, fmt):
-    if "json" == fmt:
-        return print(json.dumps(out))
-    return print(yaml.dump(out))
-
-
-def _ask_consent(diffs):
-    for atype, diff in diffs.items():
-        print(
-            f"The following {atype}{'s are' if len(diff) > 1 else ' is'} set to be changed:"
-        )
-        for name, change in diff.items():
-            print(f"{name}: {change['from']} -> {change['to']}")
-        print()
-    try:
-        return input("Do you want to continue? [y/n]: ").lower().startswith("y")
-    except KeyboardInterrupt:
-        print()
-        return False
-
-
-def cli():
+def main():
+    """
+    Prepare CLI args parser and hand off to DootiCLI
+    """
     parser = argparse.ArgumentParser(
         prog="dooti", description="Manage default handlers on macOS."
     )
@@ -175,6 +274,23 @@ def cli():
     )
     subparsers = parser.add_subparsers(help="commands")
 
+    apply_parser = subparsers.add_parser(
+        "apply",
+        help="Apply a YAML state configuration.",
+    )
+    apply_parser.add_argument(
+        "-u",
+        "--dynamic",
+        action="store_true",
+        help="Allow unregistered file extensions / dynamic UTIs.",
+    )
+    apply_parser.add_argument(
+        "-i",
+        "--file",
+        help="Configuration to apply. If unspecified, searches in $XDG_CONFIG_HOME.",
+    )
+    apply_parser.set_defaults(func="apply_")
+
     ext_parser = subparsers.add_parser(
         "ext",
         help="Manage the default handler for all UTI associated with file extensions",
@@ -193,7 +309,7 @@ def cli():
         "--handler",
         help="The handler to associate with the file extensions. If unset, returns the default handler(s).",
     )
-    ext_parser.set_defaults(func=ext)
+    ext_parser.set_defaults(func="ext")
 
     scheme_parser = subparsers.add_parser(
         "scheme", help="Manage default handler for URI scheme(s)"
@@ -204,7 +320,7 @@ def cli():
         "--handler",
         help="The handler to associate with the scheme(s). If unset, returns the default handler(s).",
     )
-    scheme_parser.set_defaults(func=scheme)
+    scheme_parser.set_defaults(func="scheme")
 
     uti_parser = subparsers.add_parser("uti", help="Manage default handler for UTI(s)")
     uti_parser.add_argument("utis", nargs="+", help="UTI(s) to operate on")
@@ -213,17 +329,22 @@ def cli():
         "--handler",
         help="The handler to associate with the UTI(s). If unset, returns the default handler(s).",
     )
-    uti_parser.set_defaults(func=uti)
+    uti_parser.set_defaults(func="uti")
 
     args = parser.parse_args()
     if len(sys.argv[1:]) == 0:
         parser.print_help()
         parser.exit()
     args = parser.parse_args()
+    cli = DootiCLI(assume_yes=args.assume_yes, dry_run=args.dry_run, fmt=args.fmt)
     func = args.func
     del args.func
-    return func(**vars(args))
+    del args.assume_yes
+    del args.dry_run
+    del args.fmt
+
+    cli.run(func, args)
 
 
 if __name__ == "__main__":
-    sys.exit(cli())
+    main()

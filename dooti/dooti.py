@@ -81,15 +81,25 @@ class dooti:
         """
         utis = dooti.ext_to_utis(ext)
 
-        if "dyn." == str(utis[0])[:4] and not allow_dynamic:
+        if self.is_dynamic_uti(utis[0]) and not allow_dynamic:
             raise ExtHasNoRegisteredUTI(
-                "No UTI are registered for file extension '{}'. To force using a dynamic UTI, pass allow_dynamic=True.".format(
-                    ext
-                )
+                f"No UTI are registered for file extension '{ext}'. "
+                "To force using a dynamic UTI, pass allow_dynamic=True."
             )
 
         for uti in utis:
             self.set_default_uti(uti, app)
+
+    def is_dynamic_uti(self, ext_or_uti: str | UTType) -> bool:
+        """
+        Checks whether a UTI is dynamic/whether a file extension is not
+        associated with at least one registered UTI.
+
+        :param str | UTType ext_or_uti: UTI or file extension to check
+        """
+        if isinstance(ext_or_uti, str):
+            ext_or_uti = dooti.ext_to_utis(ext_or_uti)[0]
+        return str(ext_or_uti).startswith("dyn.")
 
     def get_default_uti(self, uti: str | UTType) -> str | None:
         """
@@ -175,9 +185,7 @@ class dooti:
             return self.name_to_url(app)
         except ApplicationNotFound:
             raise ApplicationNotFound(
-                "Could not find an application matching the description '{}'.".format(
-                    app
-                )
+                f"Could not find an application matching the description '{app}'."
             )
 
     def bundle_to_url(self, bundle_id: str) -> NSURL:
@@ -194,7 +202,7 @@ class dooti:
 
         if path is None:
             raise BundleURLNotFound(
-                "There is no bundle with the identifier '{}'.".format(bundle_id)
+                f"There is no bundle with the identifier '{bundle_id}'."
             )
 
         return path
@@ -213,7 +221,7 @@ class dooti:
 
         if path is None:
             raise ApplicationNotFound(
-                "Could not find an application named '{}'.".format(app_name)
+                f"Could not find an application named '{app_name}'."
             )
 
         return NSURL.fileURLWithPath_(path)
@@ -230,8 +238,6 @@ class dooti:
         """
 
         if not skip_check and not os.path.isdir(path):
-            raise ApplicationNotFound(
-                "Could not find an application in '{}'.".format(path)
-            )
+            raise ApplicationNotFound(f"Could not find an application in '{path}'.")
 
         return NSURL.fileURLWithPath_(path)

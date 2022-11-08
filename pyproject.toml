@@ -14,18 +14,22 @@ classifiers = [
 ]
 
 [tool.poetry.scripts]
-dooti = "dooti.cli:cli"
+dooti = "dooti.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
 pyobjc-core = "^7.2"
 pyobjc-framework-UniformTypeIdentifiers = "^7.2"
 PyYAML = "^6.0"
+xdg = "^5.1.1"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^4.4.0"
-black = "^21.12b0"
 sphinx-rtd-theme = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+pylint = "^2.15.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
