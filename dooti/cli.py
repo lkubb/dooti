@@ -41,30 +41,38 @@ class DootiCLI:
         parsed = {"extensions": {}, "schemes": {}, "utis": {}}
 
         for ext, handler in definitions.get("ext", {}).items():
-            _, single = self.ext([ext], dynamic=dynamic, handler=handler)
-            parsed["extensions"].update(single["extensions"])
+            try:
+                _, single = self.ext([ext], dynamic=dynamic, handler=handler)
+                parsed["extensions"].update(single["extensions"])
+            except ApplicationNotFound as err:
+                self.errors.append(str(err))
 
         for scope in ("scheme", "uti"):
             parser = getattr(self, scope)
             for item, handler in definitions.get(scope, {}).items():
-                _, single = parser([item], handler=handler)
-                parsed[f"{scope}s"].update(single[f"{scope}s"])
-
-        for scheme, handler in definitions.get("schemes", {}).items():
-            _, single = self.scheme([scheme], handler=handler)
-            parsed["extensions"].update(single["extensions"])
+                try:
+                    _, single = parser([item], handler=handler)
+                    parsed[f"{scope}s"].update(single[f"{scope}s"])
+                except ApplicationNotFound as err:
+                    self.errors.append(str(err))
 
         for handler, app_config in definitions.get("app", {}).items():
             if "ext" in app_config:
-                _, single = self.ext(
-                    app_config["ext"], dynamic=dynamic, handler=handler
-                )
-                parsed["extensions"].update(single["extensions"])
+                try:
+                    _, single = self.ext(
+                        app_config["ext"], dynamic=dynamic, handler=handler
+                    )
+                    parsed["extensions"].update(single["extensions"])
+                except ApplicationNotFound as err:
+                    self.errors.append(str(err))
             for scope in ("scheme", "uti"):
                 if scope in app_config:
                     parser = getattr(self, scope)
-                    _, single = parser(app_config[scope], handler=handler)
-                    parsed[f"{scope}s"].update(single[f"{scope}s"])
+                    try:
+                        _, single = parser(app_config[scope], handler=handler)
+                        parsed[f"{scope}s"].update(single[f"{scope}s"])
+                    except ApplicationNotFound as err:
+                        self.errors.append(str(err))
 
         return None, parsed
 
