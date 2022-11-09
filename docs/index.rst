@@ -1,5 +1,5 @@
 Welcome to dooti's documentation!
-======================================
+=================================
 
 .. toctree::
    :maxdepth: 2
@@ -8,6 +8,7 @@ Welcome to dooti's documentation!
    readme
    usage
    api
+   history
 
 Indices and tables
 ==================
