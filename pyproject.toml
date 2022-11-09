@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "dooti"
-version = "0.1.1"
-description = "Manages default file and URL scheme handlers on macOS 12.0+"
+version = "0.2.0"
+description = "Manage default file and URI scheme handlers on macOS 12.0+"
 authors = ["jeanluc"]
 readme = "README.rst"
 repository = "https://github.com/lkubb/dooti"

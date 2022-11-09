@@ -2,6 +2,13 @@
 History
 =======
 
+0.2.0 (2022-11-09)
+------------------
+
+* Support idempotent state application from YAML config (dotfiles)
+* BREAKING: rename class ``dooti.dooti`` to ``dooti.Dooti``
+
+
 0.1.1 (2022-11-07)
 ------------------
 
