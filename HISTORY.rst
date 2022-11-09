@@ -2,6 +2,13 @@
 History
 =======
 
+0.2.1 (2022-11-09)
+------------------
+
+* Continue state application when app is absent
+* Try to workaround a crash caused by exiting too early
+
+
 0.2.0 (2022-11-09)
 ------------------
 
