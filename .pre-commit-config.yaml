@@ -33,3 +33,15 @@ repos:
             "-rn", # Only display messages
             "-sn", # Don't display the score
           ]
+  - repo: local
+    hooks:
+      - id: rstcheck
+        name: rstcheck
+        entry: rstcheck
+        language: system
+        types: [rst]
+        args: [--config=pyproject.toml]
+  - repo: https://github.com/sphinx-contrib/sphinx-lint
+    rev: v0.6.7
+    hooks:
+      - id: sphinx-lint

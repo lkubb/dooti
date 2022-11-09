@@ -31,6 +31,7 @@ sphinx-rtd-theme = "^1.0.0"
 black = "^22.10.0"
 pylint = "^2.15.5"
 pre-commit = "^2.20.0"
+rstcheck = {extras = ["sphinx", "toml"], version = "^6.1.0"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -39,3 +40,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.rstcheck]
+ignore_directives = [
+    "automodule"
+]
