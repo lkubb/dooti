@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -160,6 +161,10 @@ class DootiCLI:
             log.error(str(err))
         finally:
             self._output(ret)
+            # bandaid for PyThread_exit_thread / pthread_exit being called too early
+            # because pyobjc does not have the correct metadata for completionHandler
+            if ret is None:
+                time.sleep(0.1)
             sys.exit(int(bool(self.errors)))
 
     def _apply_diff(self, diff):
