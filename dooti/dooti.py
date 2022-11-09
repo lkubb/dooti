@@ -3,7 +3,10 @@ import os.path
 import objc
 from AppKit import NSWorkspace  # pylint: disable=no-name-in-module
 from Foundation import NSURL, NSArray  # pylint: disable=no-name-in-module
-from UniformTypeIdentifiers import UTTagClassFilenameExtension, UTType  # pylint: disable=no-name-in-module
+from UniformTypeIdentifiers import (  # pylint: disable=no-name-in-module
+    UTTagClassFilenameExtension,
+    UTType,
+)
 
 
 class ExtHasNoRegisteredUTI(ValueError):
@@ -29,6 +32,7 @@ class Dooti:
     """
     Wrapper for macOS system API to manage default handlers on macOS 12.0+.
     """
+
     def __init__(self, workspace=None):
         if workspace is None:
             workspace = NSWorkspace.sharedWorkspace()
