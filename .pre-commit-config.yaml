@@ -1,47 +1,80 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b  # v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-toml
       - id: check-merge-conflict
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: 32151ac97cbfd7f9dcd22e49516fb32266db45b4  # v3.16.0
+    hooks:
+      - id: pyupgrade
+        name: Rewrite Code to be Py3.10+
+        args: [
+          --py310-plus,
+        ]
+        exclude: src/dooti/version.py
+
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: c235f5e450b4b84e58d114ed4c589cbf454175a3  # 5.13.2
     hooks:
       - id: isort
-        files: "\\.(py)$"
-        args: [--settings-path=pyproject.toml]
+        args: [
+          --py 310,
+        ]
+        exclude: src/dooti/version.py
+
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: b965c2a5026f8ba399283ba3e01898b012853c79  # 24.8.0
     hooks:
       - id: black
-        args: [--config=pyproject.toml]
+        exclude: src/dooti/version.py
+
+  - repo: https://github.com/adamchainz/blacken-docs
+    rev: 4c97c4a0d921007af6fefae92d8447cfbf63720b  # 1.18.0
+    hooks:
+      - id: blacken-docs
+        args: [--skip-errors]
+        files: ^(docs/.*\.rst|src/dooti/.*\.py)$
+        additional_dependencies:
+          - black==24.8.0
+
   - repo: local
     hooks:
-      - id: pylint
+      - id: lint-src
         name: pylint
         entry: pylint
         language: system
         types: [python]
-        exclude: >
-            (?x)^(
-                docs/.*|
-            )$
+        require_serial: true
+        pass_filenames: false
         args:
           [
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
+            "-rn",  # Only display messages
+            "-sn",  # Don't display the score
+            "src/",
+            "noxfile.py",
           ]
-  - repo: local
+
+  - repo: https://github.com/rstcheck/rstcheck
+    rev: f30c4d170a36ea3812bceb5f33004afc213bd797  # v6.2.4
     hooks:
       - id: rstcheck
-        name: rstcheck
-        entry: rstcheck
-        language: system
-        types: [rst]
-        args: [--config=pyproject.toml]
+        additional_dependencies:
+          - 'sphinx'
+          - 'toml'
+
   - repo: https://github.com/sphinx-contrib/sphinx-lint
-    rev: v0.6.7
+    rev: ff671d6a030a3141634793e6d1e8909ab6091830  # v1.0.0
     hooks:
       - id: sphinx-lint
+
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: 27445053da613c660ed5895d9616662059a53ca7  # v1.7.3.17
+    hooks:
+      - id: actionlint
+        additional_dependencies:
+          - shellcheck-py==0.10.0.1
