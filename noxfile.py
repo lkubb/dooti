@@ -1,11 +1,19 @@
 import os
 import shutil
+from importlib import metadata
 from pathlib import Path
 
 import nox
 
 REPO_ROOT = Path(__file__).resolve().parent
 SKIP_REQUIREMENTS_INSTALL = os.environ.get("SKIP_REQUIREMENTS_INSTALL", "0") == "1"
+
+
+nox.options.reuse_existing_virtualenvs = True
+
+# Speed up all sessions by using uv if possible
+if tuple(map(int, metadata.version("nox").split("."))) >= (2024, 3):
+    nox.options.default_venv_backend = "uv|virtualenv"
 
 
 def _install(session, *args):
