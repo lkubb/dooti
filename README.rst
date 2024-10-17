@@ -14,7 +14,7 @@ Features
 
 Installation
 ------------
-I recommend installing with `pipx <https://pypa.github.io/pipx/>`_, although pip will work fine as well:
+I recommend installing with `pipx <https://pipx.pypa.io/stable/>`_, although pip will work fine as well:
 
 .. code-block:: bash
 
