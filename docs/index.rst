@@ -8,7 +8,7 @@ Welcome to dooti's documentation!
    readme
    usage
    api
-   history
+   changelog
 
 Indices and tables
 ==================

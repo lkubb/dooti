@@ -5,6 +5,10 @@
 # only in one or another interpreter, leading to false positives when analysed.
 analyse-fallback-blocks=no
 
+# Clear in-memory caches upon conclusion of linting. Useful if running pylint
+# in a server-like mode.
+clear-cache-post-run=no
+
 # Load and enable all available extensions. Use --list-extensions to see a list
 # all available extensions.
 #enable-all-extensions=
@@ -35,19 +39,19 @@ extension-pkg-whitelist=
 fail-on=
 
 # Specify a score threshold under which the program will exit with error.
-fail-under=10
+fail-under=10.0
 
 # Interpret the stdin as a python script, whose filename needs to be passed as
 # the module_or_package argument.
 #from-stdin=
 
 # Files or directories to be skipped. They should be base names, not paths.
-ignore=CVS
+ignore=CVS,version.py
 
 # Add files or directories matching the regular expressions patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
-# format. Because '\' represents the directory delimiter on Windows systems, it
-# can't be used as an escape character.
+# format. Because '\\' represents the directory delimiter on Windows systems,
+# it can't be used as an escape character.
 ignore-paths=
 
 # Files or directories matching the regular expression patterns are skipped.
@@ -55,10 +59,11 @@ ignore-paths=
 # Emacs file locks
 ignore-patterns=^\.#
 
-# List of module names for which member attributes should not be checked
-# (useful for modules/projects where namespaces are manipulated during runtime
-# and thus existing member attributes cannot be deduced by static analysis). It
-# supports qualified module names, as well as Unix pattern matching.
+# List of module names for which member attributes should not be checked and
+# will not be imported (useful for modules/projects where namespaces are
+# manipulated during runtime and thus existing member attributes cannot be
+# deduced by static analysis). It supports qualified module names, as well as
+# Unix pattern matching.
 ignored-modules=
 
 # Python code to execute, usually for sys.path manipulation such as
@@ -68,7 +73,7 @@ ignored-modules=
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use, and will cap the count on Windows to
 # avoid hangs.
-jobs=1
+jobs=0
 
 # Control the amount of potential inferred values when inferring a single
 # object. This can help the performance when dealing with large functions or
@@ -82,12 +87,22 @@ load-plugins=
 # Pickle collected data for later comparisons.
 persistent=yes
 
+# Resolve imports to .pyi stubs if available. May reduce no-member messages and
+# increase not-an-iterable messages.
+prefer-stubs=no
+
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
 py-version=3.10
 
 # Discover python modules and packages in the file system subtree.
 recursive=no
+
+# Add paths to the list of the source roots. Supports globbing patterns. The
+# source root is an absolute path or a path relative to the current working
+# directory used to determine a package namespace for modules located under the
+# source root.
+source-roots=
 
 # When enabled, pylint would attempt to guess common misconfiguration and emit
 # user-friendly hints instead of false-positive error messages.
@@ -180,9 +195,7 @@ good-names=i,
            k,
            ex,
            Run,
-           _,
-           f,
-           do
+           _
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -226,6 +239,10 @@ no-docstring-rgx=^_
 # These decorators are taken in consideration only for invalid-name.
 property-classes=abc.abstractproperty
 
+# Regular expression matching correct type alias names. If left empty, type
+# alias names will be checked with the set naming style.
+#typealias-rgx=
+
 # Regular expression matching correct type variable names. If left empty, type
 # variable names will be checked with the set naming style.
 #typevar-rgx=
@@ -248,21 +265,18 @@ check-protected-access-in-special-methods=no
 defining-attr-methods=__init__,
                       __new__,
                       setUp,
+                      asyncSetUp,
                       __post_init__
 
 # List of member names, which should be excluded from the protected access
 # warning.
-exclude-protected=_asdict,
-                  _fields,
-                  _replace,
-                  _source,
-                  _make
+exclude-protected=_asdict,_fields,_replace,_source,_make,os._exit
 
 # List of valid names for the first argument in a class method.
 valid-classmethod-first-arg=cls
 
 # List of valid names for the first argument in a metaclass class method.
-valid-metaclass-classmethod-first-arg=cls
+valid-metaclass-classmethod-first-arg=mcs
 
 
 [DESIGN]
@@ -309,14 +323,13 @@ min-public-methods=2
 [EXCEPTIONS]
 
 # Exceptions that will emit a warning when caught.
-overgeneral-exceptions=BaseException,
-                       Exception
+overgeneral-exceptions=builtins.BaseException,builtins.Exception
 
 
 [FORMAT]
 
 # Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
-expected-line-ending-format=
+expected-line-ending-format=LF
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -348,6 +361,9 @@ single-line-if-stmt=no
 # List of modules that can be imported at any level, not just the top level
 # one.
 allow-any-import-level=
+
+# Allow explicit reexports by alias from a package __init__.
+allow-reexport-from-package=no
 
 # Allow wildcard imports from modules that define __all__.
 allow-wildcard-with-all=no
@@ -410,15 +426,11 @@ confidence=HIGH,
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=raw-checker-failed,
-        bad-inline-option,
-        locally-disabled,
-        file-ignored,
-        suppressed-message,
-        useless-suppression,
-        deprecated-pragma,
-        use-symbolic-message-instead,
-        missing-module-docstring
+disable=fixme,
+        line-too-long,
+        missing-module-docstring,
+        ungrouped-imports,
+        wrong-import-position
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -456,6 +468,11 @@ max-nested-blocks=5
 # printed.
 never-returning-functions=sys.exit,argparse.parse_error
 
+# Let 'consider-using-join' be raised when the separator to join on would be
+# non-empty (resulting in expected fixes of the type: ``"- " + " -
+# ".join(items)``)
+suggest-join-with-non-empty-separator=yes
+
 
 [REPORTS]
 
@@ -470,8 +487,9 @@ evaluation=max(0, 0 if fatal else 10.0 - ((float(5 * error + warning + refactor 
 # used to format the message information. See doc for all details.
 msg-template=
 
-# Set the output format. Available formats are text, parseable, colorized, json
-# and msvs (visual studio). You can also give a reporter class, e.g.
+# Set the output format. Available formats are: text, parseable, colorized,
+# json2 (improved json format), json (old json format) and msvs (visual
+# studio). You can also give a reporter class, e.g.
 # mypackage.mymodule.MyReporterClass.
 #output-format=
 
@@ -505,8 +523,8 @@ min-similarity-lines=4
 # Limits count of emitted suggestions for spelling mistakes.
 max-spelling-suggestions=4
 
-# Spelling dictionary name. Available dictionaries: none. To make it work,
-# install the 'python-enchant' package.
+# Spelling dictionary name. No available dictionaries : You need to install
+# both the python package and the system dependency for enchant to work.
 spelling-dict=
 
 # List of comma separated words that should be considered directives if they
@@ -593,7 +611,7 @@ signature-mutators=
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid defining new builtins when possible.
-additional-builtins=
+additional-builtins=_
 
 # Tells whether unused global variables should be treated as a violation.
 allow-global-unused-variables=yes

@@ -1,0 +1,53 @@
+---
+name: Pre-Commit
+
+on:
+  workflow_call:
+    inputs:
+      changed-files:
+        required: true
+        type: string
+        description: JSON string containing information about changed files
+
+jobs:
+  Pre-Commit:
+    name: Pre-Commit
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938  # v4.2.0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3  # v5.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Project With Development Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install '.[dev]'
+          pre-commit install --install-hooks
+
+      - name: Check ALL Files On Branch
+        if: github.event_name != 'pull_request' || fromJSON(inputs.changed-files)['pre-commit'] == 'true'
+        run: |
+          pre-commit run --show-diff-on-failure --color=always --all-files
+
+      - name: Check Changed Files On PR
+        if: github.event_name == 'pull_request' && fromJSON(inputs.changed-files)['repo'] == 'true'
+        run: |
+          pre-commit run --show-diff-on-failure --color=always --files ${{ fromJSON(inputs.changed-files)['repo_files'] }}
+
+      - name: Set Exit Status
+        if: always()
+        run: |
+          mkdir exitstatus
+          echo "${{ job.status }}" > exitstatus/${{ github.job }}
+
+      - name: Upload Exit Status
+        if: always()
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874  # v4.4.0
+        with:
+          name: exitstatus-${{ github.job }}
+          path: exitstatus
+          if-no-files-found: error

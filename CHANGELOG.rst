@@ -1,6 +1,8 @@
-=======
-History
-=======
+=========
+Changelog
+=========
+
+.. towncrier release notes start
 
 0.2.1 (2022-11-09)
 ------------------
