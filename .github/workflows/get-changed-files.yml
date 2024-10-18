@@ -34,6 +34,21 @@ jobs:
                 - .pre-commit-config.y?(a)ml
                 - .pylintrc
                 - pyproject.toml
+            docs:
+              - added|modified|deleted:
+                - .github/**
+                - docs/**
+                - noxfile.py
+                - CHANGELOG.rst
+                - README.rst
+                - pyproject.toml
+            needs_tests:
+              - added|modified|deleted:
+                - .github/**
+                - src/**
+                - tests/**
+                - noxfile.py
+                - pyproject.toml
 
       - name: Echo Changed Files Output
         run: echo "${{ toJSON(steps.changed-files.outputs) }}"
