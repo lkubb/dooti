@@ -131,8 +131,6 @@ class Dooti:
         if not handler:
             return None
 
-        # name = handler.lastPathComponent()[:-4]
-
         return handler.fileSystemRepresentation().decode()
 
     def get_default_ext(self, ext: str) -> str | None:
@@ -152,8 +150,6 @@ class Dooti:
         if not handler:
             return None
 
-        # name = handler.lastPathComponent()[:-4]
-
         return handler.fileSystemRepresentation().decode()
 
     def get_default_scheme(self, scheme: str) -> str | None:
@@ -166,14 +162,12 @@ class Dooti:
         if "file" == scheme:
             raise ValueError("The file:// scheme cannot be looked up.")
 
-        url = NSURL.URLWithString_(scheme + "://nonexistant")
+        url = NSURL.URLWithString_(scheme + "://nonexistent")
 
         handler = self.workspace.URLForApplicationToOpenURL_(url)
 
         if not handler:
             return None
-
-        # name = handler.lastPathComponent()[:-4]
 
         return handler.fileSystemRepresentation().decode()
 
@@ -187,7 +181,7 @@ class Dooti:
         :raises:
             ApplicationNotFound: when no matching application was found
         """
-        if "/" == app[0]:
+        if app[0] == "/":
             return NSURL.fileURLWithPath_(app)
 
         try:
