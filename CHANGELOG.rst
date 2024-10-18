@@ -10,7 +10,7 @@ Changelog
 Fixed
 ~~~~~
 
-- Dropped dependency pinning to allow installation with Python >3.10 (#1)
+- Dropped dependency pinning to allow installation with Python >3.10 (`#1 <https://github.com/lkubb/dooti/issues/1>`__)
 
 
 0.2.1 (2022-11-09)

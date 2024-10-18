@@ -37,7 +37,7 @@ def docs(session):
     """
     Build Docs
     """
-    _install(session, ".[docs]")
+    _install(session, "-e", ".[docs]")
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
@@ -50,7 +50,7 @@ def docs_dev(session):
     """
     Rebuild docs on changes (live preview).
     """
-    _install(session, ".[docs,docsauto]")
+    _install(session, "-e", ".[docs,docsauto]")
     build_dir = Path("docs", "_build", "html")
 
     # Allow specifying sphinx-autobuild options, like --host.
