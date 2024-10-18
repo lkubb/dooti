@@ -72,6 +72,8 @@ lint = [
 ]
 tests = [
     "pytest>=7.2.0",
+    "coverage",
+    "pytest-skip-markers",
 ]
 
 [project.scripts]

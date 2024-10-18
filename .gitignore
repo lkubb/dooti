@@ -107,3 +107,4 @@ ENV/
 
 src/dooti/version.py
 .nox/
+artifacts/
