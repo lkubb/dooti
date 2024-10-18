@@ -4,6 +4,15 @@ Changelog
 
 .. towncrier release notes start
 
+0.2.2 (2024-10-18)
+------------------
+
+Fixed
+~~~~~
+
+- Dropped dependency pinning to allow installation with Python >3.10 (#1)
+
+
 0.2.1 (2022-11-09)
 ------------------
 
