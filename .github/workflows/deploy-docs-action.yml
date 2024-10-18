@@ -8,10 +8,19 @@ on:
         type: string
         required: false
         default: html-docs
+  workflow_dispatch:
 
 jobs:
+  docs:
+    name: Render Docs
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/docs-action.yml
+
   Deploy-Docs-GH-Pages:
     name: Publish Docs to GitHub Pages
+    needs:
+      - docs
+    if: github.event_name != 'workflow_dispatch' || success()
 
     environment:
       name: github-pages
@@ -27,7 +36,7 @@ jobs:
       - name: Download built docs
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16  # v4.1.8
         with:
-          name: ${{ inputs.artifact-name }}
+          name: ${{ github.event_name != 'workflow_dispatch' && inputs.artifact-name || 'html-docs' }}
           path: html-docs
 
       - name: Upload GitHub Pages artifact
