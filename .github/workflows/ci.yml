@@ -34,12 +34,16 @@ jobs:
     name: Tests
     needs:
       - pre-commit
+      - get-changed-files
+    if: github.event_name != 'pull_request' || fromJSON(needs.get-changed-files.outputs.changed-files)['needs_tests'] == 'true'
     uses: ./.github/workflows/test-action.yml
 
   docs:
     name: Docs
     needs:
       - pre-commit
+      - get-changed-files
+    if: github.event_name != 'pull_request' || fromJSON(needs.get-changed-files.outputs.changed-files)['docs'] == 'true'
     uses: ./.github/workflows/docs-action.yml
 
   deploy-docs:
